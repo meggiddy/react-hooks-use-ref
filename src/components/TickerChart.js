@@ -1,45 +1,38 @@
 import React, { useEffect, useRef, useState } from "react";
 import { makeRandomNumber } from "../utils";
-import { addPoint } from "../utils/chart";
 
 function Ticker() {
-  const [price, setPrice] = useState({ value: 0, ticks: 0 });
+  const [price, setPrice] = useState(0);
   const [color, setColor] = useState("black");
-  const prevPrice = useRef(price);
-  const canvasRef = useRef();
+  // create the ref and set its initial value
+  const prevPriceRef = useRef(price);
 
   useEffect(() => {
-    addPoint(canvasRef.current, prevPrice.current, price);
-  }, [price]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setPrice((price) => ({
-        ticks: price.ticks + 1,
-        value: makeRandomNumber(),
-      }));
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    if (prevPrice.current.value < price.value) {
+    // use the current value of the ref
+    const prevPrice = prevPriceRef.current;
+    if (price > prevPrice) {
       setColor("green");
-    } else if (prevPrice.current.value > price.value) {
+    } else if (price < prevPrice) {
       setColor("red");
     } else {
       setColor("black");
     }
-    prevPrice.current = price;
+    // set the new value of the ref (note: this doesn't trigger a re-render)
+    prevPriceRef.current = price;
   }, [price]);
+
+  useEffect(() => {
+    const id = setInterval(() => setPrice(makeRandomNumber), 1000);
+    return function cleanup() {
+      clearInterval(id);
+    };
+  }, []);
 
   return (
     <div>
-      <h1>TickerChart</h1>
-      <canvas ref={canvasRef} width={600} height={400} />
-      <h2 style={{ color: color }}>Price: ${price.value}</h2>
+      <h1>TickerMaster</h1>
+      <h2 style={{ color: color }}>Price: ${price}</h2>
     </div>
   );
 }
-
-export default Ticker;
+export default Ticker
